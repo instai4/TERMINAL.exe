@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TERMINAL.exe | ANURAG RAJPUT</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='16' fill='%230a0a1a'/%3E%3Ctext x='14' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%234FC3F7'%3E%3E_%3C/text%3E%3C/svg%3E">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#04040f;--bg2:#080818;--card:#0c0c22;--surface:#10102a;
+      --border:#1a1a3a;--border2:#252550;
+      --txt:#c8d8ff;--txt2:#6272a4;--txt3:#3d4f80;
+      --blue:#4FC3F7;--blue2:#2196F3;--cyan:#00E5FF;
+      --green:#00FF94;--purple:#BD93F9;--pink:#FF79C6;
+      --yellow:#F1FA8C;--red:#FF5555;--orange:#FFB86C;
+      --fm:'JetBrains Mono',monospace;
+      --spring:cubic-bezier(.34,1.56,.64,1);
+    }
+    html,body{height:100%;overflow:hidden}
+    body{
+      font-family:var(--fm);background:var(--bg);color:var(--txt);
+      display:flex;flex-direction:column;cursor:none;
+    }
+
+    /* scanline effect */
+    body::before{content:'';position:fixed;inset:0;z-index:9997;pointer-events:none;
+      background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);
+      animation:scanline 8s linear infinite}
+    @keyframes scanline{0%{background-position:0 0}100%{background-position:0 100%}}
+
+    /* grid bg */
+    body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:linear-gradient(rgba(79,195,247,.03) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(79,195,247,.03) 1px,transparent 1px);
+      background-size:32px 32px}
+
+    /* CURSOR */
+    #cursor{pointer-events:none;position:fixed;z-index:9999;
+      width:12px;height:12px;border-radius:50%;
+      background:rgba(79,195,247,.3);border:2px solid var(--blue);
+      transform:translate(-50%,-50%);transition:width .12s,height .12s}
+
+    /* TITLE BAR */
+    .title-bar{
+      position:relative;z-index:10;
+      background:var(--card);border-bottom:1px solid var(--border2);
+      height:42px;display:flex;align-items:center;padding:0 1rem;gap:.75rem;
+      flex-shrink:0;
+      box-shadow:0 0 30px rgba(79,195,247,.06)
+    }
+    .tb-dots{display:flex;gap:.4rem}
+    .tb-dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.3)}
+    .tb-dot.red{background:#FF5555}
+    .tb-dot.yellow{background:#F1FA8C}
+    .tb-dot.green{background:#00FF94}
+    .tb-title{flex:1;text-align:center;font-size:.65rem;font-weight:700;
+      color:var(--txt3);letter-spacing:.15em;text-transform:uppercase}
+    .tb-status{display:flex;align-items:center;gap:.4rem;
+      font-size:.58rem;color:var(--green);letter-spacing:.08em}
+    .tb-status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);
+      animation:blink 1.5s step-end infinite}
+    @keyframes blink{50%{opacity:0}}
+
+    /* MAIN LAYOUT */
+    .terminal-wrap{
+      position:relative;z-index:1;
+      display:flex;flex:1;overflow:hidden;
+      min-height:0;
+    }
+
+    /* SIDEBAR */
+    .sidebar{
+      width:220px;flex-shrink:0;
+      background:var(--bg2);border-right:1px solid var(--border2);
+      display:flex;flex-direction:column;padding:1rem 0;
+      overflow-y:auto;
+    }
+    .sidebar::-webkit-scrollbar{width:2px}
+    .sidebar::-webkit-scrollbar-thumb{background:var(--border2)}
+
+    .sb-label{font-size:.5rem;color:var(--txt3);letter-spacing:.2em;
+      text-transform:uppercase;padding:.5rem 1rem .25rem;display:flex;align-items:center;gap:.4rem}
+    .sb-label i{font-size:.55rem;color:var(--blue)}
+
+    .sb-cmd{display:flex;align-items:center;gap:.55rem;
+      padding:.45rem 1rem;font-size:.65rem;font-weight:700;
+      color:var(--txt2);cursor:pointer;
+      transition:all .12s;border-left:2px solid transparent;
+      letter-spacing:.04em;text-transform:uppercase}
+    .sb-cmd:hover{color:var(--blue);background:rgba(79,195,247,.05);
+      border-left-color:var(--blue)}
+    .sb-cmd.active{color:var(--blue);background:rgba(79,195,247,.08);
+      border-left-color:var(--blue)}
+    .sb-cmd i{font-size:.7rem;width:14px;text-align:center;flex-shrink:0}
+    .sb-cmd .kb{margin-left:auto;font-size:.5rem;color:var(--txt3);
+      background:var(--surface);border:1px solid var(--border2);
+      padding:1px 5px;border-radius:3px}
+
+    .sb-divider{height:1px;background:var(--border);margin:.5rem 1rem}
+
+    .sb-system{padding:.75rem 1rem;margin-top:auto}
+    .sb-sys-row{display:flex;justify-content:space-between;align-items:center;
+      font-size:.55rem;margin-bottom:.3rem}
+    .sb-sys-label{color:var(--txt3);text-transform:uppercase;letter-spacing:.08em}
+    .sb-sys-val{color:var(--green)}
+    .sb-bar{height:3px;background:var(--surface);border-radius:2px;margin-bottom:.4rem;overflow:hidden}
+    .sb-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--cyan));
+      animation:load-bar 2s var(--spring) forwards}
+    @keyframes load-bar{from{width:0%}to{width:var(--w)}}
+
+    /* TERMINAL SCREEN */
+    .terminal{
+      flex:1;display:flex;flex-direction:column;min-width:0;
+      background:var(--bg);overflow:hidden;
+    }
+
+    /* OUTPUT AREA */
+    .output{
+      flex:1;overflow-y:auto;padding:1.4rem 1.6rem;
+      scroll-behavior:smooth;min-height:0;
+    }
+    .output::-webkit-scrollbar{width:4px}
+    .output::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+    /* OUTPUT LINES */
+    .line{display:flex;flex-direction:column;margin-bottom:.15rem;
+      animation:line-in .15s ease;font-size:.8rem;line-height:1.6}
+    @keyframes line-in{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
+
+    .line-cmd{color:var(--blue);font-weight:700}
+    .line-cmd .prompt{color:var(--txt3)}
+    .line-cmd .prompt-user{color:var(--green)}
+    .line-cmd .prompt-at{color:var(--txt3)}
+    .line-cmd .prompt-host{color:var(--purple)}
+    .line-cmd .prompt-path{color:var(--blue)}
+    .line-cmd .prompt-dollar{color:var(--txt2)}
+
+    .line-out{color:var(--txt);padding-left:0}
+    .line-out.dim{color:var(--txt3)}
+    .line-out.success{color:var(--green)}
+    .line-out.warn{color:var(--yellow)}
+    .line-out.err{color:var(--red)}
+    .line-out.blue{color:var(--blue)}
+    .line-out.cyan{color:var(--cyan)}
+    .line-out.purple{color:var(--purple)}
+    .line-out.pink{color:var(--pink)}
+    .line-out.orange{color:var(--orange)}
+    .line-out.blank{color:transparent;user-select:none}
+
+    /* blocks */
+    .block{background:var(--card);border:1px solid var(--border2);
+      border-left:3px solid var(--blue);
+      border-radius:6px;padding:.75rem 1rem;margin:.35rem 0;
+      font-size:.78rem}
+    .block.green{border-left-color:var(--green)}
+    .block.purple{border-left-color:var(--purple)}
+    .block.cyan{border-left-color:var(--cyan)}
+    .block.pink{border-left-color:var(--pink)}
+    .block.orange{border-left-color:var(--orange)}
+    .block.yellow{border-left-color:var(--yellow)}
+
+    .block-title{font-size:.65rem;font-weight:800;letter-spacing:.12em;
+      text-transform:uppercase;margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem}
+    .block-title i{font-size:.65rem}
+    .block-title.blue{color:var(--blue)}
+    .block-title.green{color:var(--green)}
+    .block-title.purple{color:var(--purple)}
+    .block-title.cyan{color:var(--cyan)}
+    .block-title.pink{color:var(--pink)}
+    .block-title.orange{color:var(--orange)}
+    .block-title.yellow{color:var(--yellow)}
+
+    .kv{display:flex;gap:.5rem;margin-bottom:.2rem;font-size:.75rem}
+    .kv-k{color:var(--txt3);min-width:90px;flex-shrink:0}
+    .kv-v{color:var(--txt)}
+    .kv-v a{color:var(--blue);text-decoration:none}
+    .kv-v a:hover{text-decoration:underline}
+
+    /* project card */
+    .proj-card{background:var(--surface);border:1px solid var(--border2);
+      border-radius:6px;padding:.65rem .85rem;margin:.3rem 0;
+      transition:border-color .15s;cursor:pointer}
+    .proj-card:hover{border-color:var(--blue);background:rgba(79,195,247,.04)}
+    .proj-name{font-weight:800;font-size:.78rem;color:var(--blue);margin-bottom:.15rem}
+    .proj-desc{font-size:.7rem;color:var(--txt2);margin-bottom:.3rem;line-height:1.5}
+    .proj-tags{display:flex;gap:.3rem;flex-wrap:wrap}
+    .proj-tag{font-size:.55rem;font-weight:700;color:var(--txt3);
+      background:var(--card);border:1px solid var(--border2);
+      padding:1px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.06em}
+    .proj-links{display:flex;gap:.5rem;margin-top:.35rem}
+    .proj-link{font-size:.58rem;color:var(--blue);text-decoration:none;
+      display:flex;align-items:center;gap:.25rem}
+    .proj-link:hover{color:var(--cyan)}
+
+    /* skill tags grid */
+    .skill-grid{display:flex;flex-wrap:wrap;gap:.35rem;margin:.35rem 0}
+    .skill-tag{font-size:.62rem;font-weight:700;
+      padding:3px 10px;border-radius:4px;letter-spacing:.05em;
+      border:1px solid;text-transform:uppercase}
+    .skill-tag.lang{color:var(--blue);border-color:rgba(79,195,247,.35);background:rgba(79,195,247,.06)}
+    .skill-tag.data{color:var(--green);border-color:rgba(0,255,148,.25);background:rgba(0,255,148,.05)}
+    .skill-tag.tool{color:var(--purple);border-color:rgba(189,147,249,.25);background:rgba(189,147,249,.05)}
+    .skill-tag.db{color:var(--orange);border-color:rgba(255,184,108,.25);background:rgba(255,184,108,.05)}
+    .skill-tag.soft{color:var(--pink);border-color:rgba(255,121,198,.25);background:rgba(255,121,198,.05)}
+    .skill-tag.web{color:var(--cyan);border-color:rgba(0,229,255,.25);background:rgba(0,229,255,.05)}
+
+    /* contact chip */
+    .contact-chip{display:inline-flex;align-items:center;gap:.5rem;
+      font-size:.72rem;padding:.4rem .8rem;border-radius:6px;
+      border:1px solid var(--border2);background:var(--surface);
+      margin:.25rem .2rem;color:var(--txt);text-decoration:none;
+      transition:all .12s}
+    .contact-chip:hover{border-color:var(--blue);color:var(--blue);background:rgba(79,195,247,.06)}
+    .contact-chip i{font-size:.75rem}
+
+    /* INPUT ROW */
+    .input-row{
+      flex-shrink:0;
+      border-top:1px solid var(--border2);
+      background:var(--bg2);
+      padding:.75rem 1.6rem;
+      display:flex;align-items:center;gap:.5rem;
+    }
+    .input-prompt{display:flex;align-items:center;gap:.2rem;flex-shrink:0;font-size:.8rem;font-weight:700;white-space:nowrap}
+    .input-prompt .pu{color:var(--green)}
+    .input-prompt .pa{color:var(--txt3)}
+    .input-prompt .ph{color:var(--purple)}
+    .input-prompt .pp{color:var(--blue)}
+    .input-prompt .pd{color:var(--txt2)}
+    #cmd-input{
+      flex:1;background:transparent;border:none;outline:none;
+      font-family:var(--fm);font-size:.8rem;font-weight:700;
+      color:var(--blue);caret-color:var(--cyan);min-width:0;
+    }
+    #cmd-input::placeholder{color:var(--txt3)}
+
+    /* AI thinking */
+    .ai-thinking{display:flex;align-items:center;gap:.6rem;
+      font-size:.7rem;color:var(--txt3);padding:.25rem 0}
+    .ai-thinking-dots span{display:inline-block;width:4px;height:4px;border-radius:50%;
+      background:var(--blue);margin:0 1.5px;
+      animation:dot-b .8s ease-in-out infinite}
+    .ai-thinking-dots span:nth-child(2){animation-delay:.15s}
+    .ai-thinking-dots span:nth-child(3){animation-delay:.3s}
+    @keyframes dot-b{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
+
+    /* BOOT SCREEN */
+    #boot{position:fixed;inset:0;z-index:500;background:var(--bg);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;
+      font-family:var(--fm);font-size:.72rem;color:var(--blue);
+      transition:opacity .6s ease}
+    #boot.done{opacity:0;pointer-events:none}
+    .boot-line{opacity:0;animation:boot-fade .15s ease forwards}
+    @keyframes boot-fade{to{opacity:1}}
+    .boot-bar-wrap{width:300px;height:4px;background:var(--surface);border-radius:2px;
+      margin-top:.8rem;overflow:hidden;border:1px solid var(--border2)}
+    .boot-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));
+      border-radius:2px;width:0;transition:width .1s linear}
+
+    /* MOBILE note */
+    @media(max-width:640px){
+      .sidebar{display:none}
+      .output{padding:1rem}
+      .input-row{padding:.6rem 1rem}
+      .input-prompt .pa,.input-prompt .ph,.input-prompt .pp{display:none}
+    }
+  </style>
+</head>
+<body>
+<div id="cursor"></div>
+
+<!-- BOOT SCREEN -->
+<div id="boot">
+  <div class="boot-line" style="animation-delay:.1s;color:var(--txt3)">BIOS v2.4.1 — Initializing...</div>
+  <div class="boot-line" style="animation-delay:.4s;color:var(--green)">[ OK ] Memory check passed</div>
+  <div class="boot-line" style="animation-delay:.7s;color:var(--green)">[ OK ] File system mounted</div>
+  <div class="boot-line" style="animation-delay:1s;color:var(--green)">[ OK ] AI core online</div>
+  <div class="boot-line" style="animation-delay:1.3s;color:var(--blue)">[ .. ] Loading ANURAG.exe portfolio...</div>
+  <div class="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
+  <div class="boot-line" style="animation-delay:2.6s;color:var(--txt3)">Type <span style="color:var(--blue)">help</span> to get started</div>
+</div>
+
+<!-- TITLE BAR -->
+<div class="title-bar">
+  <div class="tb-dots">
+    <div class="tb-dot red"></div>
+    <div class="tb-dot yellow"></div>
+    <div class="tb-dot green"></div>
+  </div>
+  <div class="tb-title">TERMINAL.exe — anurag@portfolio:~</div>
+  <div class="tb-status"><div class="tb-status-dot"></div>ONLINE</div>
+</div>
+
+<!-- MAIN -->
+<div class="terminal-wrap">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-label"><i class="fa-solid fa-terminal"></i> Commands</div>
+    <div class="sb-cmd active" onclick="runCmd('help')"><i class="fa-solid fa-circle-question"></i> help <span class="kb">?</span></div>
+    <div class="sb-cmd" onclick="runCmd('whoami')"><i class="fa-solid fa-user"></i> whoami</div>
+    <div class="sb-cmd" onclick="runCmd('ls projects')"><i class="fa-solid fa-folder-open"></i> ls projects</div>
+    <div class="sb-cmd" onclick="runCmd('skills')"><i class="fa-solid fa-code"></i> skills</div>
+    <div class="sb-cmd" onclick="runCmd('contact')"><i class="fa-solid fa-envelope"></i> contact</div>
+    <div class="sb-divider"></div>
+    <div class="sb-label"><i class="fa-solid fa-star"></i> Extras</div>
+    <div class="sb-cmd" onclick="runCmd('open portfolio')"><i class="fa-solid fa-globe"></i> open portfolio</div>
+    <div class="sb-cmd" onclick="runCmd('open github')"><i class="fa-brands fa-github"></i> open github</div>
+    <div class="sb-cmd" onclick="runCmd('easter')"><i class="fa-solid fa-egg"></i> easter</div>
+    <div class="sb-cmd" onclick="runCmd('clear')"><i class="fa-solid fa-trash"></i> clear <span class="kb">Ctrl+L</span></div>
+    <div class="sb-divider"></div>
+    <div class="sb-system">
+      <div class="sb-sys-row"><span class="sb-sys-label">CPU</span><span class="sb-sys-val">99%</span></div>
+      <div class="sb-bar"><div class="sb-bar-fill" style="--w:99%"></div></div>
+      <div class="sb-sys-row"><span class="sb-sys-label">CREATIVITY</span><span class="sb-sys-val">MAX</span></div>
+      <div class="sb-bar"><div class="sb-bar-fill" style="--w:100%"></div></div>
+      <div class="sb-sys-row"><span class="sb-sys-label">COFFEE</span><span class="sb-sys-val">LOW</span></div>
+      <div class="sb-bar"><div class="sb-bar-fill" style="--w:12%;background:linear-gradient(90deg,var(--orange),var(--yellow))"></div></div>
+    </div>
+  </div>
+
+  <!-- TERMINAL -->
+  <div class="terminal">
+    <div class="output" id="output"></div>
+    <div class="input-row">
+      <div class="input-prompt">
+        <span class="pu">anurag</span>
+        <span class="pa">@</span>
+        <span class="ph">portfolio</span>
+        <span class="pp">:~</span>
+        <span class="pd">$</span>
+      </div>
+      <input type="text" id="cmd-input" placeholder="type a command..." autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── CURSOR ── */
+const cur = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cur.style.left = e.clientX+'px';
+  cur.style.top = e.clientY+'px';
+});
+
+/* ── BOOT ── */
+const bootEl = document.getElementById('boot');
+const bootBar = document.getElementById('boot-bar');
+let bw = 0;
+const bootInt = setInterval(() => {
+  bw = Math.min(100, bw + Math.random() * 18);
+  bootBar.style.width = bw + '%';
+  if (bw >= 100) {
+    clearInterval(bootInt);
+    setTimeout(() => {
+      bootEl.classList.add('done');
+      setTimeout(() => { bootEl.style.display='none'; bootWelcome(); }, 600);
+    }, 400);
+  }
+}, 120);
+
+/* ── DATA ── */
+const DATA = {
+  name: 'Anurag Rajput',
+  age: 20,
+  title: 'Data Science Student',
+  uni: 'Dev Bhoomi Uttarakhand University (DBUU)',
+  year: '2nd Year B.Tech — Data Science',
+  location: 'Varanasi, India / Remote',
+  status: 'OPEN FOR WORK',
+  bio: '20-year-old Data Science student passionate about exploring the endless possibilities data offers. Building NeoBrutalist web experiences and AI-powered tools on the side.',
+  email: '4444readerrajput@gmail.com',
+  phone: '+91 8910350896',
+  github: 'https://github.com/instai4',
+  linkedin: 'https://www.linkedin.com/in/anurag-singh-43230a380/',
+  portfolio: 'https://instai4.github.io/PORT-FOLIO/',
+  instagram: 'https://www.instagram.com/inst.ai.4',
+  projects: [
+    {
+      name: 'GENIE.exe',
+      desc: 'AI mind reader that guesses any person, character or animal. Multi-provider AI fallback (Grok → Groq → Gemini). Unlimited questions, 95% confidence threshold.',
+      tags: ['HTML5','CSS3','JavaScript','Vercel','Grok API','Gemini'],
+      live: 'https://genie-exe.vercel.app',
+      github: 'https://github.com/instai4/GENIE.exe'
+    },
+    {
+      name: 'SNAKELY',
+      desc: 'Classic snake game with glowing cyberpunk aesthetics and smooth controls. Eat, grow, beat your high score.',
+      tags: ['HTML5','CSS3','JavaScript'],
+      live: 'https://instai4.github.io/SNAKELY/',
+      github: 'https://github.com/instai4/SNAKELY'
+    },
+    {
+      name: 'FIN-FLOW',
+      desc: 'Privacy-focused offline-first finance tracker. Track spending, set budgets, achieve goals. Installable as mobile app (PWA).',
+      tags: ['HTML5','CSS3','JavaScript','MongoDB'],
+      live: 'https://instai4.github.io/FIN-FLOW/',
+      github: 'https://github.com/instai4/FIN-FLOW'
+    },
+    {
+      name: 'CLOCKS MADE CLOCK',
+      desc: 'Analog clock built entirely from tiny digital clocks — blending mathematical precision with visual design.',
+      tags: ['HTML5','CSS3','JavaScript','React'],
+      live: 'https://instai4.github.io/Clocks-Made-Clock/',
+      github: 'https://github.com/instai4/Clocks-Made-Clock'
+    },
+    {
+      name: 'THE SCRIBBLE NIGHTMARE',
+      desc: 'Horror-themed interactive gallery of eerie drawings with atmospheric effects, filtering, and modal viewing system.',
+      tags: ['HTML5','CSS3','JavaScript','Canva'],
+      live: 'https://instai4.github.io/Scribbled-NIGHTMARE/',
+      github: 'https://github.com/instai4/Scribbled-NIGHTMARE'
+    }
+  ],
+  skills: {
+    languages: ['Java','Python','C','JavaScript'],
+    web: ['HTML5','CSS3','React'],
+    data: ['Data Cleaning','Data Analysis','Data Collection','ML','TensorFlow','Pandas','Scikit-learn','Tableau'],
+    databases: ['SQL','MongoDB','CouchDB'],
+    tools: ['Jupyter','Excel','VS Code','Git'],
+    soft: ['Problem Solving','Communication','Teamwork']
+  },
+  experience: [
+    { role:'Data Science Intern', org:'Tech Solutions Inc. (Remote)', period:'Summer 2024' },
+    { role:'Freelance Web Developer', org:'Self-Employed', period:'2024 – Present' },
+  ]
+};
+
+/* ── HISTORY ── */
+let history = [];
+let histIdx = -1;
+
+/* ── OUTPUT ── */
+const out = document.getElementById('output');
+function print(content, cls='line-out', delay=0) {
+  return new Promise(res => setTimeout(() => {
+    const div = document.createElement('div');
+    div.className = 'line';
+    if (typeof content === 'string') {
+      const span = document.createElement('div');
+      span.className = cls;
+      span.innerHTML = content;
+      div.appendChild(span);
+    } else {
+      div.appendChild(content);
+    }
+    out.appendChild(div);
+    out.scrollTop = out.scrollHeight;
+    res();
+  }, delay));
+}
+
+function printCmd(cmd) {
+  const div = document.createElement('div');
+  div.className = 'line';
+  const inner = document.createElement('div');
+  inner.className = 'line-cmd';
+  inner.innerHTML = `<span class="prompt"><span class="prompt-user">anurag</span><span class="prompt-at">@</span><span class="prompt-host">portfolio</span><span class="prompt-path">:~</span><span class="prompt-dollar"> $</span></span> ${escHtml(cmd)}`;
+  div.appendChild(inner);
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+
+function printBlock(cls, titleCls, icon, title, rows) {
+  const div = document.createElement('div');
+  div.className = 'line';
+  const block = document.createElement('div');
+  block.className = `block ${cls}`;
+  let html = `<div class="block-title ${titleCls}"><i class="fa-solid ${icon}"></i> ${title}</div>`;
+  html += rows;
+  block.innerHTML = html;
+  div.appendChild(block);
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+
+function blank() { print('&nbsp;','line-out blank'); }
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+/* ── BOOT WELCOME ── */
+async function bootWelcome() {
+  await print(`<pre style="color:var(--blue);font-size:.55rem;line-height:1.2;letter-spacing:.05em">
+  ████████╗███████╗██████╗ ███╗   ███╗██╗███╗   ██╗ █████╗ ██╗      ███████╗██╗  ██╗███████╗
+  ╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║████╗  ██║██╔══██╗██║      ██╔════╝╚██╗██╔╝██╔════╝
+     ██║   █████╗  ██████╔╝██╔████╔██║██║██╔██╗ ██║███████║██║      █████╗   ╚███╔╝ █████╗  
+     ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║██║╚██╗██║██╔══██║██║      ██╔══╝   ██╔██╗ ██╔══╝  
+     ██║   ███████╗██║  ██║██║ ╚═╝ ██║██║██║ ╚████║██║  ██║███████╗ ███████╗██╔╝ ██╗███████╗
+     ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝ ╚══════╝╚═╝  ╚═╝╚══════╝</pre>`);
+  await print(`<span style="color:var(--txt3)">──────────────────────────────────────────────────────────────────</span>`);
+  await print(`  <span style="color:var(--green)">ANURAG RAJPUT</span> <span style="color:var(--txt3)">|</span> <span style="color:var(--blue)">Data Science Student</span> <span style="color:var(--txt3)">|</span> <span style="color:var(--purple)">DBUU, India</span>`);
+  await print(`  <span style="color:var(--txt3)">Version 1.0.0 | AI-Powered | Cyberpunk Edition</span>`);
+  await print(`<span style="color:var(--txt3)">──────────────────────────────────────────────────────────────────</span>`);
+  await blank();
+  await print(`  Type <span style="color:var(--blue)">help</span> to see all commands.`);
+  await blank();
+  document.getElementById('cmd-input').focus();
+}
+
+/* ── COMMANDS ── */
+const COMMANDS = {
+
+  help: async () => {
+    await blank();
+    await print(`<span style="color:var(--cyan);font-weight:800;letter-spacing:.12em">AVAILABLE COMMANDS</span>`);
+    await blank();
+    const cmds = [
+      ['whoami',       'About me — who is Anurag Rajput'],
+      ['ls projects',  'List all projects with links'],
+      ['skills',       'Full tech stack breakdown'],
+      ['contact',      'Email, GitHub, LinkedIn & more'],
+      ['open portfolio','Open portfolio website in new tab'],
+      ['open github',  'Open GitHub profile in new tab'],
+      ['easter',       'You found the hint. Now find the command.'],
+      ['clear',        'Clear the terminal (Ctrl+L)'],
+      ['help',         'Show this help menu'],
+    ];
+    for (const [cmd, desc] of cmds) {
+      await print(`  <span style="color:var(--blue);font-weight:700;min-width:160px;display:inline-block">${cmd}</span><span style="color:var(--txt3)"> — ${desc}</span>`);
+    }
+    await blank();
+    await print(`  <span style="color:var(--txt3)">Tip: Unknown commands are handled by <span style="color:var(--purple)">AI</span>. Ask me anything.</span>`);
+    await blank();
+  },
+
+  whoami: async () => {
+    await blank();
+    printBlock('', 'blue', 'fa-user', 'IDENTITY', `
+      <div class="kv"><span class="kv-k">Name</span><span class="kv-v">${DATA.name}</span></div>
+      <div class="kv"><span class="kv-k">Age</span><span class="kv-v">${DATA.age}</span></div>
+      <div class="kv"><span class="kv-k">Title</span><span class="kv-v">${DATA.title}</span></div>
+      <div class="kv"><span class="kv-k">University</span><span class="kv-v">${DATA.uni}</span></div>
+      <div class="kv"><span class="kv-k">Year</span><span class="kv-v">${DATA.year}</span></div>
+      <div class="kv"><span class="kv-k">Location</span><span class="kv-v">${DATA.location}</span></div>
+      <div class="kv"><span class="kv-k">Status</span><span class="kv-v" style="color:var(--green)">${DATA.status}</span></div>
+    `);
+    await blank();
+    printBlock('green', 'green', 'fa-terminal', 'BIO', `<div style="color:var(--txt);font-size:.75rem;line-height:1.6">${DATA.bio}</div>`);
+    await blank();
+    printBlock('purple', 'purple', 'fa-briefcase', 'EXPERIENCE', DATA.experience.map(e =>
+      `<div class="kv"><span class="kv-k" style="color:var(--purple)">${e.period}</span><span class="kv-v"><span style="color:var(--txt)">${e.role}</span> <span style="color:var(--txt3)">@ ${e.org}</span></span></div>`
+    ).join(''));
+    await blank();
+  },
+
+  'ls projects': async () => {
+    await blank();
+    await print(`<span style="color:var(--cyan);font-weight:800;letter-spacing:.12em">PROJECTS /</span> <span style="color:var(--txt3)">${DATA.projects.length} found</span>`);
+    await blank();
+    for (const p of DATA.projects) {
+      const div = document.createElement('div');
+      div.className = 'line';
+      const card = document.createElement('div');
+      card.className = 'proj-card';
+      card.innerHTML = `
+        <div class="proj-name"><i class="fa-solid fa-folder" style="margin-right:.4rem;font-size:.65rem"></i>${p.name}</div>
+        <div class="proj-desc">${p.desc}</div>
+        <div class="proj-tags">${p.tags.map(t=>`<span class="proj-tag">${t}</span>`).join('')}</div>
+        <div class="proj-links">
+          <a class="proj-link" href="${p.live}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> Live</a>
+          <a class="proj-link" href="${p.github}" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a>
+        </div>`;
+      div.appendChild(card);
+      out.appendChild(div);
+      out.scrollTop = out.scrollHeight;
+    }
+    await blank();
+    await print(`  <span style="color:var(--txt3)">More on <a href="${DATA.github}?tab=repositories" target="_blank" style="color:var(--blue)">github.com/instai4</a></span>`);
+    await blank();
+  },
+
+  skills: async () => {
+    await blank();
+    await print(`<span style="color:var(--cyan);font-weight:800;letter-spacing:.12em">TECH STACK</span>`);
+    await blank();
+
+    const sections = [
+      { label:'Languages',  cls:'lang',  icon:'fa-code',           items: DATA.skills.languages },
+      { label:'Web',        cls:'web',   icon:'fa-globe',          items: DATA.skills.web },
+      { label:'Data & ML',  cls:'data',  icon:'fa-chart-bar',      items: DATA.skills.data },
+      { label:'Databases',  cls:'db',    icon:'fa-database',       items: DATA.skills.databases },
+      { label:'Tools',      cls:'tool',  icon:'fa-screwdriver-wrench', items: DATA.skills.tools },
+      { label:'Soft Skills',cls:'soft',  icon:'fa-people-group',   items: DATA.skills.soft },
+    ];
+
+    for (const s of sections) {
+      const div = document.createElement('div');
+      div.className = 'line';
+      const wrap = document.createElement('div');
+      wrap.style.marginBottom = '.2rem';
+      wrap.innerHTML = `<div style="font-size:.58rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.15em;margin-bottom:.3rem"><i class="fa-solid ${s.icon}" style="margin-right:.35rem"></i>${s.label}</div>
+        <div class="skill-grid">${s.items.map(i=>`<span class="skill-tag ${s.cls}">${i}</span>`).join('')}</div>`;
+      div.appendChild(wrap);
+      out.appendChild(div);
+      out.scrollTop = out.scrollHeight;
+    }
+    await blank();
+  },
+
+  contact: async () => {
+    await blank();
+    await print(`<span style="color:var(--cyan);font-weight:800;letter-spacing:.12em">CONTACT</span>`);
+    await blank();
+    printBlock('', 'blue', 'fa-satellite-dish', 'CHANNELS', `
+      <div class="kv"><span class="kv-k"><i class="fa-solid fa-envelope" style="margin-right:.3rem"></i>Email</span><span class="kv-v"><a href="mailto:${DATA.email}">${DATA.email}</a></span></div>
+      <div class="kv"><span class="kv-k"><i class="fa-solid fa-phone" style="margin-right:.3rem"></i>Phone</span><span class="kv-v">${DATA.phone}</span></div>
+      <div class="kv"><span class="kv-k"><i class="fa-brands fa-github" style="margin-right:.3rem"></i>GitHub</span><span class="kv-v"><a href="${DATA.github}" target="_blank">github.com/instai4</a></span></div>
+      <div class="kv"><span class="kv-k"><i class="fa-brands fa-linkedin" style="margin-right:.3rem"></i>LinkedIn</span><span class="kv-v"><a href="${DATA.linkedin}" target="_blank">linkedin.com/in/anurag-singh...</a></span></div>
+      <div class="kv"><span class="kv-k"><i class="fa-brands fa-instagram" style="margin-right:.3rem"></i>Instagram</span><span class="kv-v"><a href="${DATA.instagram}" target="_blank">@inst.ai.4</a></span></div>
+      <div class="kv"><span class="kv-k"><i class="fa-solid fa-map-pin" style="margin-right:.3rem"></i>Location</span><span class="kv-v">${DATA.location}</span></div>
+    `);
+    await blank();
+    await print(`  <span style="color:var(--green)">Available for freelance, internships & full-time roles.</span>`);
+    await blank();
+  },
+
+  'open portfolio': async () => {
+    await print(`  <span style="color:var(--green)">Opening portfolio...</span>`);
+    window.open(DATA.portfolio, '_blank');
+  },
+
+  'open github': async () => {
+    await print(`  <span style="color:var(--green)">Opening GitHub...</span>`);
+    window.open(DATA.github, '_blank');
+  },
+
+  easter: async () => {
+    await blank();
+    await print(`  <span style="color:var(--yellow)">Hint: try typing <span style="color:var(--pink)">sudo rm -rf /</span> 👀</span>`);
+    await blank();
+  },
+
+  'sudo rm -rf /': async () => {
+    await blank();
+    await print(`  <span style="color:var(--red)">INITIATING SYSTEM DESTRUCTION...</span>`);
+    await print(`  <span style="color:var(--orange)">Deleting /bin... ████████░░ 80%</span>`,null,200);
+    await print(`  <span style="color:var(--orange)">Deleting /usr... ██████████ 100%</span>`,null,400);
+    await print(`  <span style="color:var(--red)">CRITICAL: Cannot delete the rizz. It's permanent.</span>`,null,600);
+    await print(`  <span style="color:var(--green)">System restored. Fun fact — Anurag once stayed up 36 hours straight building GENIE.exe.</span>`,null,900);
+    await blank();
+  },
+
+  'sudo': async () => {
+    await print(`  <span style="color:var(--yellow)">anurag is not in the sudoers file. This incident will be reported. (jk — try <span style="color:var(--pink)">sudo rm -rf /</span>)</span>`);
+  },
+
+  'ls': async () => { await COMMANDS['ls projects'](); },
+  'projects': async () => { await COMMANDS['ls projects'](); },
+  'about': async () => { await COMMANDS['whoami'](); },
+  'stack': async () => { await COMMANDS['skills'](); },
+  'email': async () => { await print(`  <span style="color:var(--blue)">${DATA.email}</span>`); },
+  'github': async () => { await COMMANDS['open github'](); },
+  'portfolio': async () => { await COMMANDS['open portfolio'](); },
+
+  'neofetch': async () => {
+    await blank();
+    await print(`<span style="color:var(--blue)">        ___    </span><span style="color:var(--txt3)"> anurag</span><span style="color:var(--txt2)">@</span><span style="color:var(--blue)">portfolio</span>`);
+    await print(`<span style="color:var(--blue)">       /   \\   </span><span style="color:var(--txt3)"> ──────────────</span>`);
+    await print(`<span style="color:var(--blue)">      | A   |  </span><span style="color:var(--txt3)"> OS:</span><span style="color:var(--txt)"> ANURAG.exe v1.0</span>`);
+    await print(`<span style="color:var(--blue)">       \\___/   </span><span style="color:var(--txt3)"> Title:</span><span style="color:var(--txt)"> Data Science Student</span>`);
+    await print(`<span style="color:var(--blue)">      /|   |\\  </span><span style="color:var(--txt3)"> Uni:</span><span style="color:var(--txt)"> DBUU, Dehradun</span>`);
+    await print(`<span style="color:var(--blue)">     / |   | \\ </span><span style="color:var(--txt3)"> Location:</span><span style="color:var(--txt)"> Varanasi, India</span>`);
+    await print(`<span style="color:var(--blue)">              </span><span style="color:var(--txt3)"> Shell:</span><span style="color:var(--txt)"> TERMINAL.exe</span>`);
+    await print(`<span style="color:var(--blue)">              </span><span style="color:var(--txt3)"> Status:</span><span style="color:var(--green)"> OPEN FOR WORK</span>`);
+    await blank();
+  },
+
+  clear: () => { out.innerHTML = ''; },
+
+  'ctrl+l': () => { out.innerHTML = ''; },
+
+};
+
+/* ── RUN COMMAND ── */
+async function runCmd(rawInput) {
+  const inp = rawInput.trim();
+  if (!inp) return;
+
+  printCmd(inp);
+  const key = inp.toLowerCase().replace(/\s+/g,' ');
+
+  // update sidebar active
+  document.querySelectorAll('.sb-cmd').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim().toLowerCase().startsWith(key.split(' ')[0]));
+  });
+
+  if (COMMANDS[key]) {
+    await COMMANDS[key]();
+  } else {
+    // AI fallback
+    await aiRespond(inp);
+  }
+}
+
+/* ── AI FALLBACK ── */
+async function aiRespond(query) {
+  await blank();
+
+  // show thinking dots
+  const thinkDiv = document.createElement('div');
+  thinkDiv.className = 'line';
+  thinkDiv.innerHTML = `<div class="ai-thinking"><span style="color:var(--purple);font-size:.65rem;margin-right:.2rem">AI</span><div class="ai-thinking-dots"><span></span><span></span><span></span></div><span style="font-size:.65rem">processing query...</span></div>`;
+  out.appendChild(thinkDiv);
+  out.scrollTop = out.scrollHeight;
+
+  try {
+    const context = `You are TERMINAL.exe, the AI shell for Anurag Rajput's portfolio. Answer questions about Anurag in terminal/hacker style — short, punchy, monospace-friendly. No markdown headers. Use plain text only.
+
+About Anurag:
+- Name: ${DATA.name}, Age: ${DATA.age}
+- ${DATA.year} at ${DATA.uni}
+- Location: ${DATA.location}
+- Status: ${DATA.status}
+- Bio: ${DATA.bio}
+- Email: ${DATA.email}
+- GitHub: ${DATA.github}
+- Skills: Java, Python, C, JavaScript, HTML/CSS, React, SQL, MongoDB, CouchDB, Jupyter, TensorFlow, Tableau, Git
+- Projects: ${DATA.projects.map(p=>p.name).join(', ')}
+- Experience: Data Science Intern (Summer 2024), Freelance Web Developer (2024-present)
+
+Keep responses under 4 lines. Stay in character as a cool terminal AI.`;
+
+    const res = await fetch('/api/terminal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, context })
+    });
+
+    thinkDiv.remove();
+
+    if (res.ok) {
+      const data = await res.json();
+      const lines = (data.reply || '').split('\n').filter(l => l.trim());
+      await print(`  <span style="color:var(--purple);font-size:.6rem;font-weight:700;letter-spacing:.1em">AI ></span>`);
+      for (const l of lines) {
+        await print(`  ${escHtml(l)}`,'line-out');
+      }
+    } else {
+      await print(`  <span style="color:var(--red)">AI offline. Try: help, whoami, ls projects, skills, contact</span>`);
+    }
+  } catch(e) {
+    thinkDiv.remove();
+    await print(`  <span style="color:var(--yellow)">command not found: <span style="color:var(--txt)">${escHtml(query)}</span></span>`);
+    await print(`  <span style="color:var(--txt3)">Try <span style="color:var(--blue)">help</span> to see available commands.</span>`);
+  }
+  await blank();
+}
+
+/* ── INPUT HANDLER ── */
+const input = document.getElementById('cmd-input');
+input.addEventListener('keydown', async e => {
+  if (e.key === 'Enter') {
+    const val = input.value.trim();
+    input.value = '';
+    histIdx = -1;
+    if (!val) return;
+    history.unshift(val);
+    if (history.length > 50) history.pop();
+    await runCmd(val);
+  }
+  // history navigation
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (histIdx < history.length - 1) {
+      histIdx++;
+      input.value = history[histIdx];
+    }
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (histIdx > 0) { histIdx--; input.value = history[histIdx]; }
+    else { histIdx = -1; input.value = ''; }
+  }
+  // tab completion
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const val = input.value.toLowerCase();
+    const match = Object.keys(COMMANDS).find(k => k.startsWith(val) && k !== val);
+    if (match) input.value = match;
+  }
+  // ctrl+l
+  if (e.key === 'l' && e.ctrlKey) {
+    e.preventDefault();
+    out.innerHTML = '';
+  }
+});
+
+// keep focus on input
+document.addEventListener('click', () => input.focus());
+document.addEventListener('keydown', e => {
+  if (document.activeElement !== input && !e.ctrlKey && !e.metaKey && e.key.length === 1) {
+    input.focus();
+  }
+});
+</script>
+</body>
+</html>
