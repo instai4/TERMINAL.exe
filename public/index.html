@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TERMINAL.exe | ANURAG RAJPUT</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Syne:wght@800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='16' fill='%230a0a1a'/%3E%3Ctext x='14' y='68' font-size='52' font-family='monospace' font-weight='bold' fill='%234FC3F7'%3E%3E_%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="cursor"></div>
+
+<!-- BOOT SCREEN -->
+<div id="boot">
+  <div class="boot-line" style="animation-delay:.1s;color:var(--txt3)">BIOS v2.4.1 — Initializing...</div>
+  <div class="boot-line" style="animation-delay:.4s;color:var(--green)">[ OK ] Memory check passed</div>
+  <div class="boot-line" style="animation-delay:.7s;color:var(--green)">[ OK ] File system mounted</div>
+  <div class="boot-line" style="animation-delay:1s;color:var(--green)">[ OK ] AI core online</div>
+  <div class="boot-line" style="animation-delay:1.3s;color:var(--blue)">[ .. ] Loading ANURAG.exe portfolio...</div>
+  <div class="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
+  <div class="boot-line" style="animation-delay:2.6s;color:var(--txt3)">Type <span style="color:var(--blue)">help</span> to get started</div>
+</div>
+
+<!-- TITLE BAR -->
+<div class="title-bar">
+  <div class="tb-dots">
+    <div class="tb-dot red"></div>
+    <div class="tb-dot yellow"></div>
+    <div class="tb-dot green"></div>
+  </div>
+  <div class="tb-title">TERMINAL.exe — anurag@portfolio:~</div>
+  <div class="tb-status"><div class="tb-status-dot"></div>ONLINE</div>
+</div>
+
+<!-- MAIN -->
+<div class="terminal-wrap">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-label"><i class="fa-solid fa-terminal"></i> Commands</div>
+    <div class="sb-cmd active" onclick="runCmd('help')"><i class="fa-solid fa-circle-question"></i> help <span class="kb">?</span></div>
+    <div class="sb-cmd" onclick="runCmd('whoami')"><i class="fa-solid fa-user"></i> whoami</div>
+    <div class="sb-cmd" onclick="runCmd('ls projects')"><i class="fa-solid fa-folder-open"></i> ls projects</div>
+    <div class="sb-cmd" onclick="runCmd('skills')"><i class="fa-solid fa-code"></i> skills</div>
+    <div class="sb-cmd" onclick="runCmd('contact')"><i class="fa-solid fa-envelope"></i> contact</div>
+    <div class="sb-divider"></div>
+    <div class="sb-label"><i class="fa-solid fa-star"></i> Extras</div>
+    <div class="sb-cmd" onclick="runCmd('open portfolio')"><i class="fa-solid fa-globe"></i> open portfolio</div>
+    <div class="sb-cmd" onclick="runCmd('open github')"><i class="fa-brands fa-github"></i> open github</div>
+    <div class="sb-cmd" onclick="runCmd('easter')"><i class="fa-solid fa-egg"></i> easter</div>
+    <div class="sb-cmd" onclick="runCmd('clear')"><i class="fa-solid fa-trash"></i> clear <span class="kb">Ctrl+L</span></div>
+    <div class="sb-divider"></div>
+    <div class="sb-system">
+      <div class="sb-sys-row"><span class="sb-sys-label">CPU</span><span class="sb-sys-val">99%</span></div>
+      <div class="sb-bar"><div class="sb-bar-fill" style="--w:99%"></div></div>
+      <div class="sb-sys-row"><span class="sb-sys-label">CREATIVITY</span><span class="sb-sys-val">MAX</span></div>
+      <div class="sb-bar"><div class="sb-bar-fill" style="--w:100%"></div></div>
+      <div class="sb-sys-row"><span class="sb-sys-label">COFFEE</span><span class="sb-sys-val">LOW</span></div>
+      <div class="sb-bar"><div class="sb-bar-fill" style="--w:12%;background:linear-gradient(90deg,var(--orange),var(--yellow))"></div></div>
+    </div>
+  </div>
+
+  <!-- TERMINAL -->
+  <div class="terminal">
+    <div class="output" id="output"></div>
+    <div class="input-row">
+      <div class="input-prompt">
+        <span class="pu">anurag</span>
+        <span class="pa">@</span>
+        <span class="ph">portfolio</span>
+        <span class="pp">:~</span>
+        <span class="pd">$</span>
+      </div>
+      <input type="text" id="cmd-input" placeholder="type a command..." autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+  </div>
+
+</div>
+<script src="sccript.js"></script>
+
+</body>
+</html>
