@@ -84,8 +84,8 @@ const DATA = {
     soft: ['Problem Solving','Communication','Teamwork']
   },
   experience: [
-    { role:'Data Science Intern', org:'Tech Solutions Inc. (Remote)', period:'Summer 2024' },
-    { role:'Freelance Web Developer', org:'Self-Employed', period:'2024 – Present' },
+    { role:'Data Science Intern', org:'indeed (Remote)', period:'Summer 2025' },
+    { role:'Freelance Web Developer', org:'Self-Employed', period:'April 2025 – August 2025' },
   ]
 };
 
